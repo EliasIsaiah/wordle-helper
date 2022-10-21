@@ -1,6 +1,8 @@
 #[macro_use] extern crate rocket;
 use rocket::{serde::{Deserialize, json::Json}, log};
 
+#[cfg(test)] mod tests;
+
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
 struct Task<'r> {
