@@ -2,6 +2,7 @@
 use rocket::{serde::{Deserialize, json::Json}, log};
 
 #[cfg(test)] mod tests;
+mod wordle_utils;
 
 #[derive(Deserialize)]
 #[serde(crate = "rocket::serde")]
