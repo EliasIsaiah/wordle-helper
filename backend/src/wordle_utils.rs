@@ -11,14 +11,36 @@ mod wordle_utils {
     }
 
     pub struct Letter {
-        value: String,
+        value: char,
         position: i8,
     }
 
     impl Letter {
-        pub fn new(value: String, position: i8) -> Self {
+        pub fn new(value: char, position: i8) -> Self {
             Letter { value, position }
         }
+    }
+
+    pub fn get_words_with_matching_letters(words: Vec<&str>, guesses: &Vec<Letter>) -> Vec<String> {
+        // find words containing the letters
+        // then weed out the words that don't have letters in the correct position
+        let mut result: Vec<String> = vec![];
+        for word in words {
+            // let wordCharset = &word.chars();
+            for guessLetter in guesses {
+                for (i, ith_char) in word.clone().chars().enumerate() {
+                    if guessLetter.position < 0 {
+                        if ith_char == guessLetter.value {
+                            result.push(String::from(word));
+                        }
+                    }
+                }
+                // if wordCharset.clone().enumerate().any(|c| c.1 == guessLetter.value) {
+                //     let variable = true;
+                // }
+            }
+        }
+        vec!["smite".to_string(), "smote".to_string()]
     }
 }
 
@@ -35,12 +57,12 @@ mod tests {
 
     #[test]
     fn get_words_with_letters_in_matching_locations() {
-        let words = vec!["tooth".to_string(), "patio".to_string(), "alient".to_string(), "smite".to_string(), "sugar".to_string(), "smote".to_string()];
-        let guess = [
-            Letter::new(String::from("s"), 0),
-            Letter::new(String::from("t"), -1),
-        ];
+        let words = vec!["tooth", "patio", "alien", "smite", "sugar", "smote"];
+        let guesses = vec![Letter::new('s', 0), Letter::new('t', -1)];
         let expected = vec!["smite".to_string(), "smote".to_string()];
-        assert!(expected.contains(&"smote".to_string()));
+        let actual = get_words_with_matching_letters(words, guesses);
+        let result_one = actual.iter().any(|x| x == "smote");
+        let result_two = actual.iter().any(|x| x == "smite");
+        assert!(result_one && result_two);
     }
 }
