@@ -13,26 +13,34 @@ mod wordle_utils {
     pub struct Letter {
         value: char,
         position: i8,
+        excluded_indices: Option<Vec<i8>>,
     }
 
     impl Letter {
-        pub fn new(value: char, position: i8) -> Self {
-            Letter { value, position }
+        pub fn new(value: char, position: i8, excluded_indices: Option<Vec<i8>>) -> Self {
+            Letter { value, position, excluded_indices }
         }
     }
 
-    pub fn get_words_with_matching_letters(words: Vec<&str>, guesses: &Vec<Letter>) -> Vec<String> {
+    pub fn get_words_with_matching_letters(allPossibleWords: Vec<&str>, guessedWordVector: &Vec<Letter>) -> Vec<String> {
         // find words containing the letters
         // then weed out the words that don't have letters in the correct position
         let mut result: Vec<String> = vec![];
-        for word in words {
+        for word in allPossibleWords {
             // let wordCharset = &word.chars();
-            for guessLetter in guesses {
+            for guessLetter in guessedWordVector {
                 for (i, ith_char) in word.clone().chars().enumerate() {
-                    if guessLetter.position < 0 {
+                    
+                    if guessLetter.position < 0 { // yellow
                         if ith_char == guessLetter.value {
                             result.push(String::from(word));
                         }
+                    } else { // green
+                       if i as i8 == guessLetter.position {
+                        if ith_char == guessLetter.value {
+                            result.push(String::from(word));
+                        }
+                       }
                     }
                 }
                 // if wordCharset.clone().enumerate().any(|c| c.1 == guessLetter.value) {
@@ -58,9 +66,9 @@ mod tests {
     #[test]
     fn get_words_with_letters_in_matching_locations() {
         let words = vec!["tooth", "patio", "alien", "smite", "sugar", "smote"];
-        let guesses = vec![Letter::new('s', 0), Letter::new('t', -1)];
+        let guesses = vec![Letter::new('s', 0, None), Letter::new('t', -1, Some(vec![2]))];
         let expected = vec!["smite".to_string(), "smote".to_string()];
-        let actual = get_words_with_matching_letters(words, guesses);
+        let actual = get_words_with_matching_letters(words, &guesses); // stool
         let result_one = actual.iter().any(|x| x == "smote");
         let result_two = actual.iter().any(|x| x == "smite");
         assert!(result_one && result_two);
