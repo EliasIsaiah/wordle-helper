@@ -50,6 +50,20 @@ mod wordle_utils {
         }
         vec!["smite".to_string(), "smote".to_string()]
     }
+
+pub fn get_filtered_words(allPossibleWords: &Vec<String>, excludedChars: Vec<char>) -> Vec<String> {
+    let mut filtered_words = allPossibleWords.clone();
+    for word in allPossibleWords {
+        let split_string = word.chars();
+        if split_string.enumerate().any(|c| excludedChars.contains(&c.1)) {
+            filtered_words = filtered_words
+            .into_iter()
+            .filter(|s| !s.parse::<String>().unwrap().eq_ignore_ascii_case(word))
+            .collect();
+        }
+    }
+    filtered_words
+}
 }
 
 #[cfg(test)]
@@ -72,5 +86,14 @@ mod tests {
         let result_one = actual.iter().any(|x| x == "smote");
         let result_two = actual.iter().any(|x| x == "smite");
         assert!(result_one && result_two);
+    }
+
+    #[test]
+    fn filter_out_words_based_on_char_exclusion_list() {
+        let char_exclusion_list = vec!['a','m','d','y'];
+        let words: Vec<String> = vec!["tooth".to_string(), "patio".to_string(), "alien".to_string(), "smite".to_string(), "sugar".to_string(), "smote".to_string()];
+        let expected = vec!["tooth".to_string()];
+        let actual = get_filtered_words(&words, char_exclusion_list);
+        assert_eq!(expected, actual);
     }
 }
