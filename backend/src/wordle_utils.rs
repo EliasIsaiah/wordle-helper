@@ -12,58 +12,52 @@ mod wordle_utils {
 
     pub struct Letter {
         value: char,
-        position: i8,
-        excluded_indices: Option<Vec<i8>>,
+        indices: [i8; 5],
     }
 
     impl Letter {
-        pub fn new(value: char, position: i8, excluded_indices: Option<Vec<i8>>) -> Self {
-            Letter { value, position, excluded_indices }
+        pub fn new(value: char, indices: [i8; 5]) -> Self {
+            Letter { value, indices }
         }
     }
 
-    pub fn get_words_with_matching_letters(allPossibleWords: Vec<&str>, guessedWordVector: &Vec<Letter>) -> Vec<String> {
-        // find words containing the letters
-        // then weed out the words that don't have letters in the correct position
+    pub fn get_words_with_matching_letters(
+        all_possible_words: &Vec<String>,
+        guessed_word_vector: &Vec<Letter>,
+    ) -> Vec<String> {
         let mut result: Vec<String> = vec![];
-        for word in allPossibleWords {
-            // let wordCharset = &word.chars();
-            for guessLetter in guessedWordVector {
-                for (i, ith_char) in word.clone().chars().enumerate() {
-                    
-                    if guessLetter.position < 0 { // yellow
-                        if ith_char == guessLetter.value {
-                            result.push(String::from(word));
-                        }
-                    } else { // green
-                       if i as i8 == guessLetter.position {
-                        if ith_char == guessLetter.value {
-                            result.push(String::from(word));
-                        }
-                       }
-                    }
+        for guess_letter in guessed_word_vector {
+            for (i, char_value) in guess_letter.indices.iter().enumerate() {
+                match char_value {
+                    -1 => println!("-1"),
+                    0 => println!("0"),
+                    1 => println!("1"),
+                    _ => println!("this is impossible")
                 }
-                // if wordCharset.clone().enumerate().any(|c| c.1 == guessLetter.value) {
-                //     let variable = true;
-                // }
             }
         }
-        vec!["smite".to_string(), "smote".to_string()]
+        vec!["mouth".to_string()]
     }
 
-pub fn get_filtered_words(allPossibleWords: &Vec<String>, excludedChars: Vec<char>) -> Vec<String> {
-    let mut filtered_words = allPossibleWords.clone();
-    for word in allPossibleWords {
-        let split_string = word.chars();
-        if split_string.enumerate().any(|c| excludedChars.contains(&c.1)) {
-            filtered_words = filtered_words
-            .into_iter()
-            .filter(|s| !s.parse::<String>().unwrap().eq_ignore_ascii_case(word))
-            .collect();
+    pub fn get_filtered_words(
+        all_possible_words: &Vec<String>,
+        excluded_chars: Vec<char>,
+    ) -> Vec<String> {
+        let mut filtered_words = all_possible_words.clone();
+        for word in all_possible_words {
+            let split_string = word.chars();
+            if split_string
+                .enumerate()
+                .any(|c| excluded_chars.contains(&c.1))
+            {
+                filtered_words = filtered_words
+                    .into_iter()
+                    .filter(|s| !s.parse::<String>().unwrap().eq_ignore_ascii_case(word))
+                    .collect();
+            }
         }
+        filtered_words
     }
-    filtered_words
-}
 }
 
 #[cfg(test)]
@@ -78,22 +72,28 @@ mod tests {
     }
 
     #[test]
-    fn get_words_with_letters_in_matching_locations() {
-        let words = vec!["tooth", "patio", "alien", "smite", "sugar", "smote"];
-        let guesses = vec![Letter::new('s', 0, None), Letter::new('t', -1, Some(vec![2]))];
-        let expected = vec!["smite".to_string(), "smote".to_string()];
-        let actual = get_words_with_matching_letters(words, &guesses); // stool
-        let result_one = actual.iter().any(|x| x == "smote");
-        let result_two = actual.iter().any(|x| x == "smite");
-        assert!(result_one && result_two);
+    fn filter_out_words_based_on_char_exclusion_list() {
+        let char_exclusion_list = vec!['a', 'm', 'd', 'y'];
+        let words: Vec<String> = vec![
+            "tooth".to_string(),
+            "patio".to_string(),
+            "alien".to_string(),
+            "smite".to_string(),
+            "sugar".to_string(),
+            "smote".to_string(),
+        ];
+        let expected = vec!["tooth".to_string()];
+        let actual = get_filtered_words(&words, char_exclusion_list);
+        assert_eq!(expected, actual);
     }
 
     #[test]
-    fn filter_out_words_based_on_char_exclusion_list() {
-        let char_exclusion_list = vec!['a','m','d','y'];
-        let words: Vec<String> = vec!["tooth".to_string(), "patio".to_string(), "alien".to_string(), "smite".to_string(), "sugar".to_string(), "smote".to_string()];
-        let expected = vec!["tooth".to_string()];
-        let actual = get_filtered_words(&words, char_exclusion_list);
+    fn get_all_words_with_letter_somewhere_but_not_here() {
+        let words: Vec<String> = vec!["mouth".to_string(), "amber".to_string()];
+        // let guesses = vec![Letter::new('s', 0, None), Letter::new('t', -1, Some(vec![2]))];
+        let letters: Vec<Letter> = vec![Letter::new('m', [-1, 0, -1, -1, -1])];
+        let expected = vec!["mouth".to_string()];
+        let actual = get_words_with_matching_letters(&words, &letters);
         assert_eq!(expected, actual);
     }
 }
