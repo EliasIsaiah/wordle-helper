@@ -25,18 +25,45 @@ mod wordle_utils {
         all_possible_words: &Vec<String>,
         guessed_word_vector: &Vec<Letter>,
     ) -> Vec<String> {
+        let mut all_possible_words = all_possible_words.clone();
         let mut result: Vec<String> = vec![];
         for guess_letter in guessed_word_vector {
             for (i, char_value) in guess_letter.indices.iter().enumerate() {
                 match char_value {
-                    -1 => println!("-1"),
-                    0 => println!("0"),
+                    -1 => {
+                        // doesn't contain this letter
+                        all_possible_words =
+                            get_filtered_words(&all_possible_words, vec![guess_letter.value]);
+                        println!("-1")
+                    }
+                    0 => {
+                        // solution contains this letter but not at this index
+                        all_possible_words = filter_words_by_index_and_value(
+                            &all_possible_words,
+                            i,
+                            guess_letter.value,
+                        );
+                        println!("0");
+                    }
                     1 => println!("1"),
-                    _ => println!("this is impossible")
+                    _ => println!("this is impossible"),
                 }
             }
         }
         vec!["mouth".to_string()]
+    }
+
+    pub fn filter_words_by_index_and_value(
+        all_possile_words: &Vec<String>,
+        target_index: usize,
+        target_char: char,
+    ) -> Vec<String> {
+        let mut filtered_words = all_possile_words.clone();
+        filtered_words = filtered_words
+            .into_iter()
+            .filter(|word| word.chars().collect::<Vec<char>>()[target_index].eq_ignore_ascii_case(&target_char))
+            .collect();
+        filtered_words
     }
 
     pub fn get_filtered_words(
@@ -94,6 +121,14 @@ mod tests {
         let letters: Vec<Letter> = vec![Letter::new('m', [-1, 0, -1, -1, -1])];
         let expected = vec!["mouth".to_string()];
         let actual = get_words_with_matching_letters(&words, &letters);
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn filter_words_by_index_and_value_test() {
+        let words: Vec<String> = vec!["mouth".to_string(), "amber".to_string(),"tubes".to_string(), "scoby".to_string(), "death".to_string()];
+        let expected = vec!["amber".to_string(), "tubes".to_string()];
+        let actual = filter_words_by_index_and_value(&words, 2, 'b');
         assert_eq!(expected, actual);
     }
 }
