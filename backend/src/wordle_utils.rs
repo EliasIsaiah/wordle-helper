@@ -12,48 +12,73 @@ mod wordle_utils {
 
     pub struct Letter {
         value: char,
-        indices: [i8; 5],
+        indices: [Condition; 5],
+    }
+
+    pub enum Condition {
+        NotAnywhere,
+        NotHere,
+        Here,
+        CouldBeHere,
     }
 
     impl Letter {
-        pub fn new(value: char, indices: [i8; 5]) -> Self {
+        pub fn new(value: char, indices: [Condition; 5]) -> Self {
             Letter { value, indices }
         }
     }
 
     pub fn get_words_with_matching_letters(
         all_possible_words: &Vec<String>,
-        guessed_word_vector: &Vec<Letter>,
+        guessed_letter_vector: &Vec<Letter>,
     ) -> Vec<String> {
         let mut all_possible_words = all_possible_words.clone();
-        let mut result: Vec<String> = vec![];
-        for guess_letter in guessed_word_vector {
+        let mut protected_indices: Vec<i8> = vec![];
+        let mut all_indices_not_here = true;
+
+        for guess_letter in guessed_letter_vector {
             for (i, char_value) in guess_letter.indices.iter().enumerate() {
                 match char_value {
-                    -1 => {
-                        // doesn't contain this letter
-                        all_possible_words =
-                            get_filtered_words(&all_possible_words, vec![guess_letter.value]);
-                        println!("-1")
-                    }
-                    0 => {
-                        // solution contains this letter but not at this index
-                        all_possible_words = filter_words_by_index_and_value(
+                    Condition::NotHere => {
+                        // check if every index is NotHere
+                        // if that is the case, remove words from consideration that contain the char in question
+                        for condition in &guess_letter.indices {
+                            match condition {
+                                Condition::NotHere => (), // do nothing as all_indices_not_here is already set to true
+                                _ => { all_indices_not_here = false}
+                            }
+                        }
+
+                        if (all_indices_not_here) {
+                            all_possible_words =
+                                get_filtered_words(&all_possible_words, vec![guess_letter.value]);
+                        }
+                        // result must not contain this letter at this specific index
+                        all_possible_words = get_words_with_not_this_char_at_this_index(
                             &all_possible_words,
                             i,
                             guess_letter.value,
                         );
-                        println!("0");
                     }
-                    1 => println!("1"),
-                    _ => println!("this is impossible"),
+                    Condition::Here => {
+                        protected_indices.push(i.clone().try_into().unwrap());
+                        // result must contain this letter at this specific index
+                        // prevent this index from being considered for any other match
+                        all_possible_words = get_words_with_this_char_at_this_index(
+                            &all_possible_words,
+                            i,
+                            guess_letter.value,
+                        );
+                    }
+                    Condition::CouldBeHere => (), // result contains this letter at an unknown index
+                    _ => (),
                 }
             }
         }
-        vec!["mouth".to_string()]
+        all_possible_words
     }
 
-    pub fn filter_words_by_index_and_value(
+    pub fn get_words_with_this_char_at_this_index(
         all_possile_words: &Vec<String>,
         target_index: usize,
         target_char: char,
@@ -61,7 +86,25 @@ mod wordle_utils {
         let mut filtered_words = all_possile_words.clone();
         filtered_words = filtered_words
             .into_iter()
-            .filter(|word| word.chars().collect::<Vec<char>>()[target_index].eq_ignore_ascii_case(&target_char))
+            .filter(|word| {
+                word.chars().collect::<Vec<char>>()[target_index].eq_ignore_ascii_case(&target_char)
+            })
+            .collect();
+        filtered_words
+    }
+
+    pub fn get_words_with_not_this_char_at_this_index(
+        all_possile_words: &Vec<String>,
+        target_index: usize,
+        target_char: char,
+    ) -> Vec<String> {
+        let mut filtered_words = all_possile_words.clone();
+        filtered_words = filtered_words
+            .into_iter()
+            .filter(|word| {
+                !word.chars().collect::<Vec<char>>()[target_index]
+                    .eq_ignore_ascii_case(&target_char)
+            })
             .collect();
         filtered_words
     }
@@ -100,7 +143,7 @@ mod tests {
 
     #[test]
     fn filter_out_words_based_on_char_exclusion_list() {
-        let char_exclusion_list = vec!['a', 'm', 'd', 'y'];
+        let char_exclusion_list = vec!['m', 'a', 'd', 'l', 'y'];
         let words: Vec<String> = vec![
             "tooth".to_string(),
             "patio".to_string(),
@@ -116,19 +159,154 @@ mod tests {
 
     #[test]
     fn get_all_words_with_letter_somewhere_but_not_here() {
-        let words: Vec<String> = vec!["mouth".to_string(), "amber".to_string()];
-        // let guesses = vec![Letter::new('s', 0, None), Letter::new('t', -1, Some(vec![2]))];
-        let letters: Vec<Letter> = vec![Letter::new('m', [-1, 0, -1, -1, -1])];
-        let expected = vec!["mouth".to_string()];
+        let words: Vec<String> = vec![
+            "mouth".to_string(),
+            "amber".to_string(),
+            "bombs".to_string(),
+            "month".to_string(),
+            "mangy".to_string(),
+        ];
+        let letters: Vec<Letter> = vec![
+            Letter::new(
+                'm',
+                [
+                    Condition::CouldBeHere,
+                    Condition::NotHere,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                ],
+            ),
+            Letter::new(
+                'o',
+                [
+                    Condition::CouldBeHere,
+                    Condition::Here,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                ],
+            ),
+            Letter::new(
+                'b',
+                [
+                    Condition::NotAnywhere,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                ],
+            ),
+        ];
+        let expected = vec!["mouth".to_string(), "month".to_string()];
         let actual = get_words_with_matching_letters(&words, &letters);
         assert_eq!(expected, actual);
     }
 
     #[test]
     fn filter_words_by_index_and_value_test() {
-        let words: Vec<String> = vec!["mouth".to_string(), "amber".to_string(),"tubes".to_string(), "scoby".to_string(), "death".to_string()];
+        let words: Vec<String> = vec![
+            "mouth".to_string(),
+            "amber".to_string(),
+            "tubes".to_string(),
+            "scoby".to_string(),
+            "death".to_string(),
+        ];
         let expected = vec!["amber".to_string(), "tubes".to_string()];
-        let actual = filter_words_by_index_and_value(&words, 2, 'b');
+        let actual = get_words_with_this_char_at_this_index(&words, 2, 'b');
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn get_words_with_not_this_char_at_this_index_test() {
+        let words: Vec<String> = vec![
+            "mouth".to_string(),
+            "amber".to_string(),
+            "tubes".to_string(),
+            "scoby".to_string(),
+            "death".to_string(),
+        ];
+        let expected = vec![
+            "mouth".to_string(),
+            "scoby".to_string(),
+            "death".to_string(),
+        ];
+        let actual = get_words_with_not_this_char_at_this_index(&words, 2, 'b');
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn mommy_test() {
+        // before we eliminate any words
+        // find all (if any) known "HERE" indices pairs
+        // and protect them from elimination and remove them from
+        // consideration of other letters
+
+        let words: Vec<String> = vec![
+            "mouth".to_string(), // this is the "correct" word
+            "amber".to_string(),
+            "bombs".to_string(),
+            "month".to_string(),
+            "mangy".to_string(),
+            "mommy".to_string(),
+            "mamma".to_string(),
+            "manna".to_string(),
+            "mimby".to_string(),
+        ];
+        let letters: Vec<Letter> = vec![
+            Letter::new(
+                'm',
+                [
+                    Condition::Here,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                ],
+            ),
+            Letter::new(
+                'a',
+                [
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                ],
+            ),
+            Letter::new(
+                'd',
+                [
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                ],
+            ),
+            Letter::new(
+                'a',
+                [
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                ],
+            ),
+            Letter::new(
+                'm',
+                [
+                    Condition::CouldBeHere, // protected index
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                    Condition::CouldBeHere,
+                    Condition::NotHere,
+                ],
+            ),
+        ];
+        let expected = vec!["mommy".to_string(), "mimby".to_string()];
+        let actual = get_words_with_matching_letters(&words, &letters);
         assert_eq!(expected, actual);
     }
 }
