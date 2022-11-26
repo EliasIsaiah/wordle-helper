@@ -45,7 +45,7 @@ mod wordle_utils {
                         for condition in &guess_letter.indices {
                             match condition {
                                 Condition::NotHere => (), // do nothing as all_indices_not_here is already set to true
-                                _ => { all_indices_not_here = false}
+                                _ => all_indices_not_here = false,
                             }
                         }
 
