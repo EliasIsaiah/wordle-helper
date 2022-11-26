@@ -190,11 +190,11 @@ mod tests {
             Letter::new(
                 'b',
                 [
-                    Condition::NotAnywhere,
-                    Condition::CouldBeHere,
-                    Condition::CouldBeHere,
-                    Condition::CouldBeHere,
-                    Condition::CouldBeHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
+                    Condition::NotHere,
                 ],
             ),
         ];
