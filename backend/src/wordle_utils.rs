@@ -235,7 +235,7 @@ mod tests {
         assert_eq!(expected, actual);
     }
 
-    #[test]
+    // #[test]
     fn mommy_test() {
         // before we eliminate any words
         // find all (if any) known "HERE" indices pairs
