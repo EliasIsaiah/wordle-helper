@@ -23,3 +23,4 @@ Cargo.lock
 *.pdb
 wordle-helper/.svelte-kit
 wordle-helper/build
+.vscode/settings.json
