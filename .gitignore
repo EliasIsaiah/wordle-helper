@@ -24,3 +24,4 @@ Cargo.lock
 wordle-helper/.svelte-kit
 wordle-helper/build
 .vscode/settings.json
+wordle-helper/vite*
