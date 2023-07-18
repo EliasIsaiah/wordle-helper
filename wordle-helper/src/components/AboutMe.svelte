@@ -3,7 +3,7 @@
     <li>ally 🏳‍🌈</li>
     <li>software developer</li>
     <li>cooking enthusiast</li>
-    <li>Star Trek: TNG enjoyer</li>
+    <li>Star Trek: The Next Generation enjoyer</li>
 </ul>
 <style>
     h1, ul {
