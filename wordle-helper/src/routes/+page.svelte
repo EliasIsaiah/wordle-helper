@@ -1,33 +1,30 @@
 <script>
 	import AboutMe from '../components/AboutMe.svelte';
+	// @ts-ignore
 	import { rainbowCursor } from 'cursor-effects';
 	import { onMount } from 'svelte';
+	import '../app.css';
 
 	onMount(() => {
-        let container = document.getElementsByClassName("container")[0];
-		new rainbowCursor({ element: container });
+		let docElement = document.documentElement;
+		new rainbowCursor({ element: docElement });
 	});
 </script>
 
-<div class="container">
-	<AboutMe />
-
-	<p>
-		Created with Svelte. Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation
-	</p>
+<div>
+	<div class="mx-auto flex flex-wrap h-screen place-content-center">
+		<h1 class="justify-self-stretch fixed top-0 w-screen lg:text-left text-center isolate">Elias Isaiah Roussos</h1>
+		<AboutMe />
+	</div>
 </div>
 
 <style>
-	.container {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		height: 90vh;
-	}
-
-	.container p {
-		margin: 2em;
-		padding: 2em;
-		background-color: oldlace;
+	h1 {
+		font-size: 1.5rem;
+		display: block;
+		padding: 2rem;
+		background-color: lightcyan;
+		border-top: 10px solid black;
+		border-bottom: 10px solid black;
 	}
 </style>

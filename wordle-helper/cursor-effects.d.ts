@@ -1,1 +1,1 @@
-declare module 'cursor-effects';
+declare module 'cursor-effects'
